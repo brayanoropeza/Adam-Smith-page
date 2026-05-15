@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OROMEX - 100 MARFIUFILITOS DIJERON</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Outfit:wght@300;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon-green: #00ff88; --tv-blue: #0044ff; --gold: #D4AF37; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; color: white; font-family: 'Outfit', sans-serif; overflow: hidden; display: flex; }
+        
+        #tv-panel { width: 440px; height: 100%; background: linear-gradient(180deg, #001133 0%, #000 100%); padding: 20px; z-index: 1000; border-right: 2px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; box-sizing: border-box; }
+        
+        .main-question { text-align: center; color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 5px; }
+        .tv-header { text-align: center; margin-bottom: 10px; border: 3px solid var(--gold); padding: 10px; border-radius: 12px; background: rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s; }
+        .tv-header:hover { background: var(--gold); color: #000; }
+        .tv-header h1 { font-family: 'Orbitron'; font-size: 0.95rem; color: inherit; margin: 0; }
+        
+        #total-score { text-align:center; font-size: 3rem; color: var(--gold); font-family:'Orbitron'; margin-bottom:10px; }
+        
+        .board-container { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px; flex: 1; overflow-y: auto; padding: 5px; }
+        .flip-card { height: 42px; perspective: 1000px; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.revealed .flip-card-inner { transform: rotateX(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-radius: 8px; font-weight: 900; box-sizing: border-box; border: 2px solid rgba(255,255,255,0.2); }
+        .flip-card-front { background: linear-gradient(180deg, #0044cc 0%, #001133 100%); color: var(--gold); }
+        .flip-card-back { background: var(--gold); color: black; transform: rotateX(180deg); }
+        .points-box { background: #000; color: var(--gold); padding: 2px 10px; border-radius: 5px; font-family: 'Orbitron'; font-size: 0.9rem; border: 1px solid var(--gold); }
+        
+        #fact-box { background: rgba(212, 175, 55, 0.15); border: 2px solid var(--gold); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: none; }
+        .fact-text { font-size: 0.8rem; color: #fff; line-height: 1.3; }
+        
+        .input-area { background: var(--gold); padding: 8px; border-radius: 50px; margin-bottom: 10px; }
+        .main-input { width: 100%; background: transparent; border: none; color: black; font-size: 1.3rem; font-weight: 900; text-align: center; outline: none; text-transform: uppercase; }
+        
+        .btn-back { width: 100%; padding: 12px; background: transparent; color: var(--gold); border: 2px solid var(--gold); border-radius: 50px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; transition: 0.3s; margin-top: auto; }
+        .btn-back:hover { background: var(--gold); color: #000; box-shadow: 0 0 15px var(--gold); }
+
+        #canvas-view { flex: 1; position: relative; }
+        .tag-3d { background: rgba(0,0,0,0.85); color: #fff; padding: 3px 8px; border: 1px solid var(--gold); font-family: 'Orbitron'; font-size: 8px; border-radius: 4px; pointer-events: none; }
+        .hub-tag { color: var(--gold) !important; font-size: 10px !important; box-shadow: 0 0 15px var(--gold); }
+    </style>
+</head>
+<body>
+    <div id="tv-panel">
+        <div class="main-question">¿Qué necesita OROMEX para hacer una cisterna?</div>
+        <div class="tv-header" onclick="window.location.href='conclusion.html'"><h1>100 MARFIUFILITOS DIJERON</h1></div>
+        <div id="total-score">000</div>
+        
+        <div id="fact-box"><div id="fact-num" style="color:var(--gold); font-family:'Orbitron'; font-size:0.7rem;">SABÍAS QUE #0</div><div id="fact-text" class="fact-text"></div></div>
+
+        <div id="board" class="board-container"></div>
+        <div class="input-area"><input type="text" id="entry" class="main-input" placeholder="ESCRIBE AQUÍ..." autocomplete="off"></div>
+        
+        <!-- BOTÓN DE REGRESO -->
+        <button class="btn-back" onclick="window.location.href='index.html'">← REGRESAR AL INICIO</button>
+    </div>
+    <div id="canvas-view"></div>
+
+    <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/" } }</script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        const HUB = { lat: 19.3, lon: -99.6, name: "HUB EDOMEX" };
+        const MATERIALS = [
+            { key: "CEMENTO", pts: 35, color: 0x00ff88, fact: "N3: Tecnología Alemana -> N2: China -> N1: OROMEX.", chain: [{f: {lat: 51, lon: 10}, t: {lat: 35, lon: 104}, label: "GERMANY"}, {f: {lat: 35, lon: 104}, t: HUB, label: "CHINA"}] },
+            { key: "VARILLA", pts: 18, color: 0x00f2ff, fact: "N3: Australia -> N2: USA -> N1: OROMEX.", chain: [{f: {lat: -30, lon: 140}, t: {lat: 41, lon: -87}, label: "AUSTRALIA"}, {f: {lat: 41, lon: -87}, t: HUB, label: "USA"}] },
+            { key: "EXCAVADORA", pts: 20, color: 0xff00ff, fact: "N3: Chips Japón -> N2: Alemania -> N1: OROMEX.", chain: [{f: {lat: 35, lon: 139}, t: {lat: 51, lon: 7}, label: "JAPAN"}, {f: {lat: 51, lon: 7}, t: HUB, label: "GERMANY"}] },
+            { key: "MADERA", pts: 5, color: 0xffaa00, fact: "N3: Sierras Alemania -> N2: Brasil -> N1: OROMEX.", chain: [{f: {lat: 51, lon: 10}, t: {lat: -15, lon: -50}, label: "GERMANY"}, {f: {lat: -15, lon: -50}, t: HUB, label: "BRAZIL"}] },
+            { key: "PINTURA", pts: 8, color: 0xff0055, fact: "N3: Química USA -> N2: Italia -> N1: OROMEX.", chain: [{f: {lat: 40, lon: -95}, t: {lat: 42, lon: 12}, label: "USA"}, {f: {lat: 42, lon: 12}, t: HUB, label: "ITALY"}] },
+            { key: "GRAVA", pts: 10, color: 0x00ff88, fact: "Extracción local en el Estado de México.", chain: [{f: {lat: 21, lon: -101}, t: HUB, label: "LOCAL"}] },
+            { key: "ARENA", pts: 15, color: 0x00ff88, fact: "Filtrada en Monterrey con tecnología global.", chain: [{f: {lat: 25, lon: -100}, t: HUB, label: "MONTERREY"}] },
+            { key: "ANILLOS", pts: 12, color: 0x00f2ff, fact: "Forjados localmente con acero de reciclaje.", chain: [{f: HUB, t: HUB, label: "OROMEX"}] },
+            { key: "GRUA TITAN", pts: 25, color: 0xff00ff, fact: "Ingeniería de Munich desplegada en Edomex.", chain: [{f: {lat: 48, lon: 11}, t: HUB, label: "MUNICH"}] },
+            { key: "BOLSA DE PLASTICO", pts: 2, color: 0xff0055, fact: "Saudi -> Japón -> OROMEX.", chain: [{f: {lat: 24, lon: 45}, t: {lat: 35, lon: 139}, label: "SAUDI"}, {f: {lat: 35, lon: 139}, t: HUB, label: "JAPAN"}] }
+        ];
+
+        let scene, camera, renderer, labelRenderer, controls, worldGroup, arcs = [];
+        let totalScore = 0, revealedCount = 0;
+
+        function init() {
+            const container = document.getElementById('canvas-view');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 5, 20);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            labelRenderer = new CSS2DRenderer();
+            labelRenderer.setSize(container.clientWidth, container.clientHeight);
+            labelRenderer.domElement.style.position = 'absolute'; labelRenderer.domElement.style.top = '0px';
+            container.appendChild(labelRenderer.domElement);
+            worldGroup = new THREE.Group(); scene.add(worldGroup);
+            controls = new OrbitControls(camera, labelRenderer.domElement);
+            controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.4;
+            const loader = new THREE.TextureLoader();
+            const earthTex = loader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+            worldGroup.add(new THREE.Mesh(new THREE.SphereGeometry(6, 64, 64), new THREE.MeshPhongMaterial({ map: earthTex, shininess: 10 })));
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(10, 10, 15); scene.add(sun);
+            buildBoard(); animate();
+            document.getElementById('entry').addEventListener('keypress', (e) => { if(e.key === 'Enter') engine.validate(); });
+        }
+
+        function latToVec(lat, lon, r) {
+            const phi = (90 - lat)*(Math.PI/180), theta = (lon + 180)*(Math.PI/180);
+            return new THREE.Vector3(-(r*Math.sin(phi)*Math.cos(theta)), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta));
+        }
+
+        function buildBoard() {
+            const board = document.getElementById('board');
+            MATERIALS.forEach((m, i) => {
+                const card = document.createElement('div'); card.id = `card-${i}`; card.className = 'flip-card';
+                card.innerHTML = `<div class="flip-card-inner"><div class="flip-card-front"><span>${i+1}</span><div class="points-box">??</div></div><div class="flip-card-back"><span>${m.key}</span><div class="points-box">${m.pts}</div></div></div>`;
+                card.onclick = () => engine.reveal(i);
+                board.appendChild(card);
+            });
+        }
+
+        window.engine = {
+            validate: function() {
+                const inp = document.getElementById('entry'), val = inp.value.trim().toUpperCase();
+                if(val.length < 3) return;
+                MATERIALS.forEach((m, i) => {
+                    if(!document.getElementById(`card-${i}`).classList.contains('revealed') && (m.key.includes(val) || val.includes(m.key))) { this.reveal(i); inp.value = ""; }
+                });
+            },
+            reveal: function(idx) {
+                const card = document.getElementById(`card-${idx}`);
+                if(card.classList.contains('revealed')) return;
+                card.classList.add('revealed');
+                const data = MATERIALS[idx];
+                totalScore += data.pts;
+                document.getElementById('total-score').textContent = totalScore.toString().padStart(3, '0');
+                document.getElementById('fact-text').textContent = data.fact;
+                document.getElementById('fact-num').textContent = `SABÍAS QUE #${idx + 1}`;
+                document.getElementById('fact-box').style.display = 'block';
+                data.chain.forEach((link, lidx) => {
+                    setTimeout(() => { this.addSuperNeonArc(link.f, link.t, data.color); }, lidx * 800);
+                });
+                revealedCount++;
+                if(revealedCount === MATERIALS.length) window.location.href = 'conclusion.html';
+            },
+            addSuperNeonArc: function(start, end, col) {
+                const s = latToVec(start.lat, start.lon, 6), e = latToVec(end.lat, end.lon, 6);
+                const mid = s.clone().lerp(e, 0.5).normalize().multiplyScalar(6.5 + s.distanceTo(e) * 0.2);
+                const curve = new THREE.QuadraticBezierCurve3(s, mid, e);
+                worldGroup.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 32, 0.05, 8, false), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.5 })));
+                worldGroup.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 32, 0.015, 8, false), new THREE.MeshBasicMaterial({ color: 0xffffff })));
+                const pulse = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), new THREE.MeshBasicMaterial({ color: col }));
+                worldGroup.add(pulse); arcs.push({ curve, pulse, t: 0, forward: true });
+            }
+        };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if(worldGroup && revealedCount < MATERIALS.length) worldGroup.rotation.y += 0.0005;
+            arcs.forEach(a => {
+                a.t += a.forward ? 0.01 : -0.01;
+                if(a.t >= 1) a.forward = false; if(a.t <= 0) a.forward = true;
+                a.pulse.position.copy(a.curve.getPoint(a.t));
+            });
+            controls.update(); renderer.render(scene, camera); labelRenderer.render(scene, camera);
+        }
+        init();
+    </script>
+</body>
+</html>

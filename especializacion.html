@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OROMEX - Simulador de Especialización</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --coke-red: #f40009;
+            --oromex-navy: #003380;
+            --oromex-light: #0044cc;
+            --silver: #e0e0e0;
+            --neon-blue: #00f2ff;
+            --gold: #D4AF37;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; width: 100%;
+            background: #050505;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* Side Panel */
+        #ui-panel {
+            width: 400px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--oromex-navy) 0%, #001133 100%);
+            padding: 30px;
+            z-index: 1000;
+            border-right: 2px solid var(--gold);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron';
+            font-size: 1.2rem;
+            color: #fff;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .stats-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
+        .stat-value { font-family: 'Orbitron'; font-size: 1.5rem; color: var(--gold); }
+
+        .game-status {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #fff;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid var(--gold);
+        }
+
+        /* List of Tasks */
+        #task-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 5px;
+        }
+
+        .task-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .task-card:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--gold);
+            transform: translateX(5px);
+        }
+
+        .task-card.active {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .task-num {
+            width: 30px;
+            height: 30px;
+            background: var(--gold);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+        }
+
+        .task-info h3 { margin: 0; font-size: 0.9rem; color: #fff; }
+        .task-info p { margin: 0; font-size: 0.7rem; color: #aaa; }
+
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            background: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .btn-action:hover { background: #fff; box-shadow: 0 0 20px var(--gold); transform: scale(1.02); }
+
+        .btn-back {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #canvas-view { flex: 1; position: relative; }
+
+        #overlay-msg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.85);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid var(--gold);
+            display: none;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .specialist-tag {
+            background: rgba(0,0,0,0.8);
+            padding: 5px 10px;
+            border: 1px solid var(--gold);
+            color: #fff;
+            font-family: 'Orbitron';
+            font-size: 10px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        .mode-select:hover { transform: scale(1.05); background: rgba(255,255,255,0.1) !important; box-shadow: 0 0 30px rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+    <div id="ui-panel">
+        <div class="header">
+            <h1 id="factory-title">SIMULADOR</h1>
+            <div id="factory-subtitle" style="font-size: 0.6rem; color: #888; margin-top: 5px;">ESPECIALIZACIÓN</div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-item"><span class="stat-label">Producción</span><span id="prod-value" class="stat-value">0 CPM</span></div>
+            <div class="stat-item"><span class="stat-label">Eficiencia</span><span id="eff-value" class="stat-value">0%</span></div>
+            <div class="stat-item"><span class="stat-label">Especialistas</span><span id="spec-value" class="stat-value">0 / 8</span></div>
+        </div>
+
+        <div class="game-status" id="status-text">Carga una empresa para comenzar.</div>
+        <div id="task-list"></div>
+        <button class="btn-action" onclick="game.autoSpecialize()">ESPECIALIZAR TODO</button>
+        <button class="btn-back" onclick="window.location.href='division.html'">← VOLVER</button>
+    </div>
+
+    <div id="canvas-view">
+        <div id="selection-modal" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(20px);">
+            <h1 style="font-family:'Orbitron'; color:var(--gold); margin-bottom:40px;">ELIGE TU EMPRESA</h1>
+            <div style="display:flex; gap:30px;">
+                <div onclick="initGame('coke')" style="width:250px; padding:30px; background:rgba(244,0,9,0.1); border:2px solid var(--coke-red); border-radius:20px; text-align:center; cursor:pointer; transition:0.3s;" class="mode-select">
+                    <div style="font-size:4rem;">🥤</div><h2 style="font-family:'Orbitron'; color:var(--coke-red);">COCA-COLA</h2>
+                </div>
+                <div onclick="initGame('ford')" style="width:250px; padding:30px; background:rgba(0,68,204,0.1); border:2px solid #0044cc; border-radius:20px; text-align:center; cursor:pointer; transition:0.3s;" class="mode-select">
+                    <div style="font-size:4rem;">🚗</div><h2 style="font-family:'Orbitron'; color:#0044cc;">FORD MOTOR</h2>
+                </div>
+            </div>
+        </div>
+
+        <div id="overlay-msg">
+            <h2>¡ESPECIALIZACIÓN COMPLETADA!</h2>
+            <p>Has demostrado la teoría de Adam Smith.</p>
+            <button class="btn-action" onclick="window.location.href='experiencia.html'">IR A LA EXPERIENCIA FINAL →</button>
+        </div>
+    </div>
+
+    <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/" } }</script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        const CONFIGS = {
+            coke: {
+                title: "COCA-COLA FACTORY", color: "#f40009", itemType: "can",
+                stages: [
+                    { id: 1, name: "Filtrado de Agua", desc: "Purificación base.", color: 0x00aaff },
+                    { id: 2, name: "Mezcla de Jarabe", desc: "Fórmula secreta.", color: 0x4a2c2a },
+                    { id: 3, name: "Carbonatación", desc: "Inyección de CO2.", color: 0xffffff },
+                    { id: 4, name: "Lavado de Latas", desc: "Limpieza con aire.", color: 0xcccccc },
+                    { id: 5, name: "Llenado", desc: "Líquido en la lata.", color: 0xff0000 },
+                    { id: 6, name: "Sellado", desc: "Cierre hermético.", color: 0x888888 },
+                    { id: 7, name: "Codificación", desc: "Fecha y lote.", color: 0x00ff00 },
+                    { id: 8, name: "Empacado", desc: "Charolas finales.", color: 0xffaa00 }
+                ]
+            },
+            ford: {
+                title: "FORD MOTOR CO.", color: "#0044cc", itemType: "car",
+                stages: [
+                    { id: 1, name: "Estructura Chasis", desc: "Acero del Model T.", color: 0x222222 },
+                    { id: 2, name: "Ejes y Suspensión", desc: "Sistemas de rodaje.", color: 0x555555 },
+                    { id: 3, name: "Motor", desc: "Corazón de combustión.", color: 0x888888 },
+                    { id: 4, name: "Transmisión", desc: "Caja planetaria.", color: 0xaaaaaa },
+                    { id: 5, name: "Carrocería", desc: "Paneles de acero.", color: 0x111111 },
+                    { id: 6, name: "Pintura Negra", desc: "Secado rápido.", color: 0x000000 },
+                    { id: 7, name: "Interiores", desc: "Asientos y mandos.", color: 0x4a2c2a },
+                    { id: 8, name: "Ruedas de Radios", desc: "Montaje para rodar.", color: 0xddaa44 }
+                ]
+            }
+        };
+
+        let currentMode = null, STAGES = [], scene, camera, renderer, labelRenderer, controls;
+        let conveyor, items = [], specialists = [], worker, productionRate = 1, specializedCount = 0, isGeneralistMode = true;
+
+        window.initGame = function(mode) {
+            currentMode = mode; STAGES = CONFIGS[mode].stages;
+            document.getElementById('selection-modal').style.display = 'none';
+            document.getElementById('factory-title').textContent = CONFIGS[mode].title;
+            document.getElementById('factory-title').style.color = CONFIGS[mode].color;
+            document.getElementById('status-text').textContent = "Un solo trabajador hace todo. ¡Especializa!";
+            initThree();
+        };
+
+        function initThree() {
+            const container = document.getElementById('canvas-view');
+            scene = new THREE.Scene(); scene.background = new THREE.Color(0x050505);
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
+            camera.position.set(15, 12, 15);
+            renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            labelRenderer = new CSS2DRenderer(); labelRenderer.setSize(container.clientWidth, container.clientHeight);
+            labelRenderer.domElement.style.position = 'absolute'; labelRenderer.domElement.style.top = '0';
+            container.appendChild(labelRenderer.domElement);
+            controls = new OrbitControls(camera, labelRenderer.domElement);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+            const sun = new THREE.DirectionalLight(0xffffff, 1); sun.position.set(10, 20, 10); scene.add(sun);
+            scene.add(new THREE.GridHelper(40, 40, 0x222222, 0x111111));
+            buildFactory(); buildUI(); animate();
+        }
+
+        function buildFactory() {
+            conveyor = new THREE.Mesh(new THREE.BoxGeometry(20, 0.4, 2), new THREE.MeshPhongMaterial({ color: 0x222222 }));
+            scene.add(conveyor);
+            STAGES.forEach((stage, i) => {
+                const x = -8 + (i * 2.3);
+                const machine = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.5, 1.2), new THREE.MeshPhongMaterial({ color: 0x333333 }));
+                machine.position.set(x, 0.8, -1.8); scene.add(machine);
+                const light = new THREE.PointLight(stage.color, 1, 3); light.position.set(x, 1.5, -1.2); scene.add(light);
+                const div = document.createElement('div'); div.className = 'specialist-tag'; div.textContent = "?"; div.id = `tag-${stage.id}`;
+                const label = new CSS2DObject(div); label.position.set(x, 2.5, -1.8); scene.add(label);
+            });
+            worker = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.5, 4, 8), new THREE.MeshPhongMaterial({ color: 0xffffff }));
+            worker.position.set(-8, 0.5, 1.5); scene.add(worker);
+        }
+
+        function buildUI() {
+            const list = document.getElementById('task-list'); list.innerHTML = "";
+            [...STAGES].sort(() => Math.random() - 0.5).forEach(stage => {
+                const card = document.createElement('div'); card.className = 'task-card'; card.id = `task-${stage.id}`;
+                card.innerHTML = `<div class="task-num">?</div><div class="task-info"><h3>${stage.name}</h3><p>${stage.desc}</p></div>`;
+                card.onclick = () => window.game.specialize(stage.id); list.appendChild(card);
+            });
+        }
+
+        function spawnItem() {
+            const group = new THREE.Group();
+            if(CONFIGS[currentMode].itemType === 'can') {
+                const can = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.5, 16), new THREE.MeshPhongMaterial({ color: 0x333333 }));
+                can.position.y = 0.45; group.add(can);
+            } else {
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.4), new THREE.MeshPhongMaterial({ color: 0x222222 }));
+                body.position.y = 0.4; group.add(body);
+            }
+            group.position.x = -10; group.userData = { filled: false }; scene.add(group); items.push(group);
+        }
+
+        window.game = {
+            specialize: function(id) {
+                if(id !== specializedCount + 1) {
+                    document.getElementById('status-text').textContent = "⚠️ Orden incorrecto.";
+                    return;
+                }
+                const stage = STAGES.find(s => s.id === id);
+                document.getElementById(`task-${id}`).classList.add('active');
+                document.getElementById(`task-${id}`).querySelector('.task-num').textContent = id;
+                document.getElementById(`tag-${id}`).textContent = stage.name;
+                const x = -8 + ((id-1) * 2.3);
+                const spec = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.4, 4, 8), new THREE.MeshPhongMaterial({ color: stage.color }));
+                spec.position.set(x, 0.5, 1.2); scene.add(spec);
+                specializedCount++; isGeneralistMode = false; worker.visible = false; this.updateStats();
+                document.getElementById('status-text').textContent = `¡${stage.name} listo!`;
+            },
+            autoSpecialize: function() { for(let i = 1; i <= 8; i++) this.specialize(i); },
+            updateStats: function() {
+                productionRate = Math.pow(2, specializedCount - 1);
+                if(specializedCount === 0) productionRate = 1;
+                if(specializedCount === 8) productionRate = 60;
+                document.getElementById('prod-value').textContent = `${productionRate} CPM`;
+                document.getElementById('eff-value').textContent = `${Math.round((specializedCount/8)*100)}%`;
+                document.getElementById('spec-value').textContent = `${specializedCount} / 8`;
+                if(specializedCount === 8) document.getElementById('overlay-msg').style.display = 'block';
+            }
+        };
+
+        let lastTime = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = performance.now() * 0.001;
+            const spawnInterval = isGeneralistMode ? 5 : (60 / (productionRate * 1.5));
+            if(time - lastTime > spawnInterval) { spawnItem(); lastTime = time; }
+            if(isGeneralistMode) {
+                const x = -8 + ((time % 5) / 5 * 18); worker.position.x = x;
+                items.forEach(item => { if(item.position.x < x) item.position.x += 0.05; });
+            } else {
+                items.forEach((item, i) => {
+                    item.position.x += (0.02 + specializedCount * 0.01);
+                    const stageIdx = Math.floor((item.position.x + 8) / 2.3);
+                    if(stageIdx >= 5 && !item.userData.filled) {
+                        item.children[0].material.color.set(currentMode === 'coke' ? 0xf40009 : 0x111111);
+                        item.userData.filled = true;
+                    }
+                    if(item.position.x > 12) { scene.remove(item); items.splice(i, 1); }
+                });
+            }
+            controls.update(); renderer.render(scene, camera); labelRenderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>

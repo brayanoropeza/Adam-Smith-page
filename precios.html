@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OROMEX - PRECIOS Y MERCADO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #D4AF37; --neon-green: #00ff88; --neon-pink: #ff00ff; --deep-space: #000510; }
+        body, html { margin: 0; padding: 0; background: var(--deep-space); color: #fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 100px 20px; text-align: center; }
+        h1 { font-family: 'Orbitron'; font-size: 3rem; color: var(--gold); margin-bottom: 50px; text-shadow: 0 0 20px var(--gold); }
+
+        .price-viz { display: flex; align-items: center; justify-content: center; gap: 40px; margin: 60px 0; }
+        .price-box { 
+            background: rgba(255,255,255,0.05); border: 2px solid rgba(212,175,55,0.2); 
+            padding: 30px; border-radius: 20px; flex: 1; transition: 0.3s;
+        }
+        .price-box:hover { border-color: var(--neon-green); transform: translateY(-10px); }
+        
+        .arrow { font-size: 3rem; color: var(--neon-pink); animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+
+        .market-lesson { 
+            background: rgba(255,255,255,0.03); border-left: 10px solid var(--neon-green); 
+            padding: 40px; border-radius: 20px; text-align: left; margin-top: 40px;
+        }
+        .market-lesson h2 { font-family: 'Orbitron'; color: var(--neon-green); margin-top: 0; }
+        .market-lesson p { font-size: 1.2rem; line-height: 1.6; color: #ccc; }
+
+        .btn-menu { 
+            display: inline-block; padding: 15px 35px; background: transparent; 
+            border: 2px solid var(--gold); color: var(--gold); text-decoration: none; 
+            font-family: 'Orbitron'; font-weight: 900; border-radius: 50px; 
+            margin-top: 40px; transition: 0.3s;
+        }
+        .btn-menu:hover { background: var(--gold); color: #000; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>OFERTA, DEMANDA Y PRECIO NATURAL</h1>
+    <p style="font-size:1.4rem; color:#aaa;">¿Por qué sube y baja el precio del cemento?</p>
+
+    <div class="price-viz">
+        <div class="price-box">
+            <h3 style="font-family:'Orbitron'; color:var(--gold)">PRECIO NATURAL</h3>
+            <p>Es el costo real: <br><span style="color:var(--neon-green)">TRABAJO + RENTA + BENEFICIO</span>. <br>Es el punto de equilibrio a largo plazo.</p>
+        </div>
+        <div class="arrow">↕</div>
+        <div class="price-box">
+            <h3 style="font-family:'Orbitron'; color:var(--gold)">PRECIO DE MERCADO</h3>
+            <p>Es el precio de hoy. <br>Subyuga a la <span style="color:var(--neon-pink)">OFERTA y DEMANDA</span> del momento.</p>
+        </div>
+    </div>
+
+    <div class="market-lesson">
+        <h2>EL BALANCE DE SMITH</h2>
+        <p>Adam Smith explicaba que si hay mucha demanda y poca oferta (ej: China cierra un puerto), el <b>Precio de Mercado</b> sube por encima del <b>Natural</b>.</p>
+        <p>Pero la economía tiende al balance: esos precios altos atraen a más productores, la oferta sube y el precio vuelve a bajar hacia su nivel natural.</p>
+        <p style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+            <span style="color:var(--neon-green)">VIGENCIA OROMEX:</span> Nuestra logística global busca que el <b>Precio de Mercado</b> sea lo más cercano posible al <b>Natural</b>, evitando la escasez mediante la coordinación de la Mano Invisible.
+        </p>
+    </div>
+
+    <a href="index.html" class="btn-menu">← VOLVER AL MENÚ DE TEORÍAS</a>
+</div>
+
+</body>
+</html>
